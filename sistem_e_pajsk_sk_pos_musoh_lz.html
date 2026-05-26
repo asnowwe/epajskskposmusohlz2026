@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem e-PAJSK SK Pos Musoh LZ</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Include Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; /* Gray-100 */
+        }
+        
+        /* Styles specific for printing */
+        @media print {
+            body {
+                background-color: white;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            .container {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+            }
+            .print-border {
+                border: 1px solid #000;
+                padding: 1rem;
+            }
+            /* Ensure background colors and text colors print properly */
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            /* Add page breaks if needed */
+            .page-break {
+                page-break-before: always;
+            }
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        /* Custom Scrollbar for tables */
+        .table-container::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        .table-container::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-gray-800 antialiased min-h-screen flex flex-col">
+
+    <!-- Navigation / Header -->
+    <nav class="bg-blue-700 text-white shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <i class="fas fa-school text-2xl mr-3"></i>
+                    <span class="font-bold text-xl tracking-tight">e-PAJSK SK Pos Musoh LZ</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button id="nav-home" class="px-3 py-2 rounded-md text-sm font-medium bg-blue-800 hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-home mr-1"></i> Utama
+                    </button>
+                    <button id="nav-add" class="px-3 py-2 rounded-md text-sm font-medium hover:bg-blue-600 transition-colors">
+                        <i class="fas fa-user-plus mr-1"></i> Tambah Rekod
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Print Header (Only visible when printing) -->
+    <div class="print-only text-center py-6 mb-4 border-b-2 border-black">
+        <h1 class="text-2xl font-bold uppercase">Sistem e-PAJSK</h1>
+        <h2 class="text-xl font-semibold uppercase">SK Pos Musoh LZ</h2>
+        <p class="text-sm mt-2" id="print-date"></p>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        
+        <!-- Loading State -->
+        <div id="loading-state" class="flex flex-col items-center justify-center py-20">
+            <i class="fas fa-spinner fa-spin text-4xl text-blue-600 mb-4"></i>
+            <p class="text-lg text-gray-600">Memuatkan data, sila tunggu...</p>
+        </div>
+
+        <!-- VIEWS -->
+        <div id="views-container" class="hidden">
+            
+            <!-- HOME VIEW: List of Students -->
+            <div id="view-home" class="bg-white rounded-xl shadow-md overflow-hidden">
+                <div class="px-6 py-5 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row justify-between items-center no-print">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2 sm:mb-0">
+                        Senarai Murid
+                    </h3>
+                    <div class="flex space-x-2 w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                                <i class="fas fa-search text-gray-400"></i>
+                            </span>
+                            <input type="text" id="search-input" class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out" placeholder="Cari nama atau MyKid...">
+                        </div>
+                        <button onclick="exportToCSV()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                            <i class="fas fa-file-excel mr-2"></i> Eksport
+                        </button>
+                        <button onclick="window.print()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            <i class="fas fa-print mr-2"></i> Cetak / PDF
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="table-container overflow-x-auto w-full">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bil</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Murid</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. MyKid/Sijil Lahir</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tahun</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Markah Keseluruhan</th>
+                                <th scope="col" class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Gred</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider no-print">Tindakan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-table-body" class="bg-white divide-y divide-gray-200">
+                            <!-- Rows will be populated here -->
+                        </tbody>
+                    </table>
+                    
+                    <!-- Empty State -->
+                    <div id="empty-state" class="hidden text-center py-12">
+                        <i class="fas fa-user-slash text-gray-300 text-5xl mb-4"></i>
+                        <h3 class="text-lg font-medium text-gray-900">Tiada Rekod Ditemui</h3>
+                        <p class="mt-1 text-sm text-gray-500 mb-6">Sistem pada masa ini kosong. Sila tambah rekod murid baharu.</p>
+                        <button id="btn-seed-data" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                            <i class="fas fa-database mr-2"></i> Masukkan Data Contoh (Ujian)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADD/EDIT RECORD VIEW -->
+            <div id="view-form" class="hidden no-print">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                    <div class="px-6 py-5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+                        <h3 id="form-title" class="text-lg leading-6 font-medium text-gray-900">
+                            Tambah Rekod Baru
+                        </h3>
+                        <button id="btn-cancel-form" class="text-gray-500 hover:text-gray-700">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    
+                    <form id="record-form" class="px-6 py-6">
+                        <input type="hidden" id="doc-id">
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Maklumat Asas -->
+                            <div class="md:col-span-2 border-b pb-4 mb-2">
+                                <h4 class="text-md font-semibold text-blue-700 mb-4"><i class="fas fa-user mr-2"></i>Maklumat Asas</h4>
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    <div>
+                                        <label for="nama" class="block text-sm font-medium text-gray-700">Nama Murid</label>
+                                        <input type="text" id="nama" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label for="mykid" class="block text-sm font-medium text-gray-700">No. MyKid / Sijil Lahir</label>
+                                        <input type="text" id="mykid" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                    </div>
+                                    <div>
+                                        <label for="tahun" class="block text-sm font-medium text-gray-700">Tahun / Kelas</label>
+                                        <select id="tahun" required class="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                                            <option value="">Pilih Tahun</option>
+                                            <option value="Tahun 4">Tahun 4</option>
+                                            <option value="Tahun 5">Tahun 5</option>
+                                            <option value="Tahun 6">Tahun 6</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Kelab & Persatuan -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h4 class="text-md font-semibold text-gray-800 mb-3"><i class="fas fa-users text-blue-500 mr-2"></i>Kelab & Persatuan (110 Markah)</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700">Nama Kelab/Persatuan</label>
+                                        <input type="text" id="kp_nama" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Kehadiran (40)</label>
+                                            <input type="number" id="kp_kehadiran" min="0" max="40" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="kp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Jawatan (10)</label>
+                                            <input type="number" id="kp_jawatan" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="kp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Penglibatan (20)</label>
+                                            <input type="number" id="kp_penglibatan" min="0" max="20" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="kp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Pencapaian (20)</label>
+                                            <input type="number" id="kp_pencapaian" min="0" max="20" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="kp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Komitmen (10)</label>
+                                            <input type="number" id="kp_komitmen" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="kp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Khidmat Sumbangan (10)</label>
+                                            <input type="number" id="kp_sumbangan" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="kp">
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-t border-gray-300">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-semibold text-gray-700">Jumlah Kelab & Persatuan:</span>
+                                            <span id="kp_jumlah" class="text-lg font-bold text-blue-600">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Pasukan Badan Beruniform -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h4 class="text-md font-semibold text-gray-800 mb-3"><i class="fas fa-shield-alt text-green-500 mr-2"></i>Badan Beruniform (110 Markah)</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700">Nama Pasukan</label>
+                                        <input type="text" id="bb_nama" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Kehadiran (40)</label>
+                                            <input type="number" id="bb_kehadiran" min="0" max="40" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="bb">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Jawatan (10)</label>
+                                            <input type="number" id="bb_jawatan" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="bb">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Penglibatan (20)</label>
+                                            <input type="number" id="bb_penglibatan" min="0" max="20" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="bb">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Pencapaian (20)</label>
+                                            <input type="number" id="bb_pencapaian" min="0" max="20" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="bb">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Komitmen (10)</label>
+                                            <input type="number" id="bb_komitmen" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="bb">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Khidmat Sumbangan (10)</label>
+                                            <input type="number" id="bb_sumbangan" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="bb">
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-t border-gray-300">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-semibold text-gray-700">Jumlah Badan Beruniform:</span>
+                                            <span id="bb_jumlah" class="text-lg font-bold text-green-600">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sukan & Permainan -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h4 class="text-md font-semibold text-gray-800 mb-3"><i class="fas fa-running text-orange-500 mr-2"></i>Sukan & Permainan (110 Markah)</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700">Nama Sukan/Permainan</label>
+                                        <input type="text" id="sp_nama" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1.5 px-2 text-sm focus:ring-blue-500 focus:border-blue-500">
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Kehadiran (40)</label>
+                                            <input type="number" id="sp_kehadiran" min="0" max="40" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="sp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Jawatan (10)</label>
+                                            <input type="number" id="sp_jawatan" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="sp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Penglibatan (20)</label>
+                                            <input type="number" id="sp_penglibatan" min="0" max="20" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="sp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Pencapaian (20)</label>
+                                            <input type="number" id="sp_pencapaian" min="0" max="20" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="sp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Komitmen (10)</label>
+                                            <input type="number" id="sp_komitmen" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="sp">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gray-600">Khidmat Sumbangan (10)</label>
+                                            <input type="number" id="sp_sumbangan" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm score-input" data-category="sp">
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 pt-2 border-t border-gray-300">
+                                        <div class="flex justify-between items-center">
+                                            <span class="text-sm font-semibold text-gray-700">Jumlah Sukan & Permainan:</span>
+                                            <span id="sp_jumlah" class="text-lg font-bold text-orange-600">0</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Ekstra Kurikulum & Ringkasan -->
+                            <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                                <h4 class="text-md font-semibold text-gray-800 mb-3"><i class="fas fa-star text-yellow-500 mr-2"></i>Ekstra Kurikulum & Ringkasan</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-medium text-gray-700">Markah Ekstra Kurikulum (Max 10)</label>
+                                        <input type="number" id="ekstra_markah" min="0" max="10" class="mt-1 block w-full border border-gray-300 rounded-md py-1.5 px-2 text-sm focus:ring-blue-500 focus:border-blue-500" value="0">
+                                    </div>
+                                    
+                                    <div class="bg-blue-50 p-3 rounded-md border border-blue-200 mt-4">
+                                        <h5 class="font-medium text-blue-800 border-b border-blue-200 pb-2 mb-2">Pengiraan Keseluruhan</h5>
+                                        <div class="space-y-1 text-sm">
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">2 Markah Tertinggi (Purata):</span>
+                                                <span id="purata_dua_tertinggi" class="font-semibold text-gray-800">0</span>
+                                            </div>
+                                            <div class="flex justify-between">
+                                                <span class="text-gray-600">+ Ekstra Kurikulum:</span>
+                                                <span id="paparan_ekstra" class="font-semibold text-gray-800">0</span>
+                                            </div>
+                                            <div class="flex justify-between pt-2 mt-2 border-t border-blue-200">
+                                                <span class="font-bold text-gray-900">Markah Keseluruhan:</span>
+                                                <span id="markah_keseluruhan" class="font-bold text-blue-700 text-lg">0</span>
+                                            </div>
+                                            <div class="flex justify-between items-center pt-1">
+                                                <span class="font-bold text-gray-900">Gred Keseluruhan:</span>
+                                                <span id="gred_keseluruhan" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-md font-medium bg-gray-100 text-gray-800">
+                                                    -
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-8 flex justify-end space-x-3 border-t pt-5">
+                            <button type="button" id="btn-cancel-bottom" class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                Batal
+                            </button>
+                            <button type="submit" id="btn-save" class="bg-blue-600 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center">
+                                <i class="fas fa-save mr-2"></i> Simpan Rekod
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- STUDENT DETAIL / PRINT VIEW -->
+            <div id="view-detail" class="hidden">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden print-border">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center no-print">
+                        <button id="btn-back-detail" class="text-gray-600 hover:text-blue-600 font-medium">
+                            <i class="fas fa-arrow-left mr-1"></i> Kembali
+                        </button>
+                        <button onclick="window.print()" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                            <i class="fas fa-print mr-2"></i> Cetak / Simpan PDF
+                        </button>
+                    </div>
+
+                    <div id="detail-content" class="p-8">
+                        <!-- Content injected via JS -->
+                    </div>
+                </div>
+            </div>
+
+        </div> <!-- End Views Container -->
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-6 mt-auto">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm font-medium text-gray-300">DISEDIAKAN OLEH: UNIT KOKURIKULUM SK POS MUSOH LZ</p>
+            <p class="text-xs text-gray-500 mt-2">&copy; <span id="current-year"></span> Hak Cipta Terpelihara</p>
+        </div>
+    </footer>
+
+    <!-- Custom Modal for Alerts/Confirmations (replacing native alert()) -->
+    <div id="custom-modal" class="fixed z-10 inset-0 overflow-y-auto hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div id="modal-icon-container" class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10">
+                            <i id="modal-icon" class="fas fa-exclamation-triangle text-xl"></i>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title">Perhatian</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-gray-500" id="modal-message"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                    <button type="button" id="modal-btn-confirm" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
+                        OK
+                    </button>
+                    <button type="button" id="modal-btn-cancel" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm hidden">
+                        Batal
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Scripts -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Global Variables
+        let app, db, auth, userId;
+        let studentsData = [];
+        let currentModalCallback = null;
+        
+        // Setup Date for print
+        document.getElementById('current-year').textContent = new Date().getFullYear();
+        
+        const formatPrintDate = () => {
+            const today = new Date();
+            const dd = String(today.getDate()).padStart(2, '0');
+            const mm = String(today.getMonth() + 1).padStart(2, '0'); 
+            const yyyy = today.getFullYear();
+            return `Tarikh Cetakan: ${dd}/${mm}/${yyyy}`;
+        };
+        document.getElementById('print-date').textContent = formatPrintDate();
+
+        // -----------------------------------------
+        // CUSTOM MODAL LOGIC (Replacement for alert/confirm)
+        // -----------------------------------------
+        function showModal(title, message, type = 'info', callback = null, isConfirm = false) {
+            const modal = document.getElementById('custom-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalMessage = document.getElementById('modal-message');
+            const iconContainer = document.getElementById('modal-icon-container');
+            const icon = document.getElementById('modal-icon');
+            const btnConfirm = document.getElementById('modal-btn-confirm');
+            const btnCancel = document.getElementById('modal-btn-cancel');
+
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+            currentModalCallback = callback;
+
+            // Styling based on type
+            iconContainer.className = 'mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full sm:mx-0 sm:h-10 sm:w-10';
+            btnConfirm.className = 'w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-base font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2 sm:ml-3 sm:w-auto sm:text-sm';
+
+            if (type === 'error' || type === 'delete') {
+                iconContainer.classList.add('bg-red-100');
+                icon.className = 'fas fa-exclamation-triangle text-red-600 text-xl';
+                btnConfirm.classList.add('bg-red-600', 'hover:bg-red-700', 'focus:ring-red-500');
+                btnConfirm.textContent = type === 'delete' ? 'Hapus' : 'OK';
+            } else if (type === 'success') {
+                iconContainer.classList.add('bg-green-100');
+                icon.className = 'fas fa-check text-green-600 text-xl';
+                btnConfirm.classList.add('bg-green-600', 'hover:bg-green-700', 'focus:ring-green-500');
+                btnConfirm.textContent = 'OK';
+            } else {
+                iconContainer.classList.add('bg-blue-100');
+                icon.className = 'fas fa-info-circle text-blue-600 text-xl';
+                btnConfirm.classList.add('bg-blue-600', 'hover:bg-blue-700', 'focus:ring-blue-500');
+                btnConfirm.textContent = 'OK';
+            }
+
+            if (isConfirm) {
+                btnCancel.classList.remove('hidden');
+            } else {
+                btnCancel.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        document.getElementById('modal-btn-confirm').addEventListener('click', () => {
+            document.getElementById('custom-modal').classList.add('hidden');
+            if (currentModalCallback) currentModalCallback(true);
+        });
+
+        document.getElementById('modal-btn-cancel').addEventListener('click', () => {
+            document.getElementById('custom-modal').classList.add('hidden');
+            if (currentModalCallback) currentModalCallback(false);
+        });
+
+        // -----------------------------------------
+        // VIEW MANAGEMENT
+        // -----------------------------------------
+        const views = {
+            home: document.getElementById('view-home'),
+            form: document.getElementById('view-form'),
+            detail: document.getElementById('view-detail')
+        };
+
+        function switchView(viewName) {
+            Object.values(views).forEach(v => v.classList.add('hidden'));
+            views[viewName].classList.remove('hidden');
+            
+            // Update active state in nav
+            const navHome = document.getElementById('nav-home');
+            const navAdd = document.getElementById('nav-add');
+            
+            navHome.className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors ' + (viewName === 'home' || viewName === 'detail' ? 'bg-blue-800 text-white' : 'hover:bg-blue-600 text-white');
+            navAdd.className = 'px-3 py-2 rounded-md text-sm font-medium transition-colors ' + (viewName === 'form' && !document.getElementById('doc-id').value ? 'bg-blue-800 text-white' : 'hover:bg-blue-600 text-white');
+        }
+
+        // Navigation Listeners
+        document.getElementById('nav-home').addEventListener('click', () => {
+            switchView('home');
+            renderTable(studentsData);
+        });
+        
+        document.getElementById('nav-add').addEventListener('click', () => {
+            resetForm();
+            document.getElementById('form-title').textContent = 'Tambah Rekod Baru';
+            switchView('form');
+        });
+
+        document.getElementById('btn-cancel-form').addEventListener('click', () => switchView('home'));
+        document.getElementById('btn-cancel-bottom').addEventListener('click', () => switchView('home'));
+        document.getElementById('btn-back-detail').addEventListener('click', () => switchView('home'));
+
+
+        // -----------------------------------------
+        // CALCULATION LOGIC (Like Google Sheets)
+        // -----------------------------------------
+        function getGrade(score) {
+            if (score >= 80) return { grade: 'A', class: 'bg-green-100 text-green-800' };
+            if (score >= 60) return { grade: 'B', class: 'bg-blue-100 text-blue-800' };
+            if (score >= 40) return { grade: 'C', class: 'bg-yellow-100 text-yellow-800' };
+            if (score >= 20) return { grade: 'D', class: 'bg-orange-100 text-orange-800' };
+            return { grade: 'E', class: 'bg-red-100 text-red-800' };
+        }
+
+        function calculateCategoryTotal(category) {
+            const kehadiran = parseFloat(document.getElementById(`${category}_kehadiran`).value) || 0;
+            const jawatan = parseFloat(document.getElementById(`${category}_jawatan`).value) || 0;
+            const penglibatan = parseFloat(document.getElementById(`${category}_penglibatan`).value) || 0;
+            const pencapaian = parseFloat(document.getElementById(`${category}_pencapaian`).value) || 0;
+            const komitmen = parseFloat(document.getElementById(`${category}_komitmen`).value) || 0;
+            const sumbangan = parseFloat(document.getElementById(`${category}_sumbangan`).value) || 0;
+
+            const total = kehadiran + jawatan + penglibatan + pencapaian + komitmen + sumbangan;
+            // Cap at 110 based on standard PAJSK rules
+            const cappedTotal = Math.min(total, 110);
+            
+            document.getElementById(`${category}_jumlah`).textContent = cappedTotal;
+            return cappedTotal;
+        }
+
+        function calculateOverall() {
+            const kpTotal = calculateCategoryTotal('kp');
+            const bbTotal = calculateCategoryTotal('bb');
+            const spTotal = calculateCategoryTotal('sp');
+            const ekstra = parseFloat(document.getElementById('ekstra_markah').value) || 0;
+
+            // Sort to get top 2
+            const scores = [kpTotal, bbTotal, spTotal].sort((a, b) => b - a);
+            const topTwoSum = scores[0] + scores[1];
+            
+            // Usually PAJSK takes average of top 2, or (Top 2 sum / 2) + Ekstra.
+            // Following standard formulation: (Markah1 + Markah2) / 2 + Ekstra Kurikulum (Max 10)
+            const averageTopTwo = topTwoSum / 2;
+            
+            // Cap ekstra to 10
+            const cappedEkstra = Math.min(ekstra, 10);
+            
+            // Final score usually capped at 100
+            const finalScoreRaw = averageTopTwo + cappedEkstra;
+            const finalScore = Math.min(Math.round(finalScoreRaw * 100) / 100, 100);
+
+            // Update UI
+            document.getElementById('purata_dua_tertinggi').textContent = averageTopTwo.toFixed(2);
+            document.getElementById('paparan_ekstra').textContent = cappedEkstra;
+            document.getElementById('markah_keseluruhan').textContent = finalScore.toFixed(2);
+            
+            const gradeInfo = getGrade(finalScore);
+            const gredEl = document.getElementById('gred_keseluruhan');
+            gredEl.textContent = `Gred ${gradeInfo.grade}`;
+            gredEl.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-md font-medium ${gradeInfo.class}`;
+
+            return {
+                kp: kpTotal, bb: bbTotal, sp: spTotal, 
+                purata: averageTopTwo, ekstra: cappedEkstra, 
+                keseluruhan: finalScore, gred: gradeInfo.grade
+            };
+        }
+
+        // Attach listeners to all score inputs for real-time calculation
+        document.querySelectorAll('.score-input, #ekstra_markah').forEach(input => {
+            input.addEventListener('input', calculateOverall);
+        });
+
+        // -----------------------------------------
+        // FORM SUBMISSION & DATA HANDLING
+        // -----------------------------------------
+        function getFormData() {
+            const calcs = calculateOverall();
+            
+            return {
+                nama: document.getElementById('nama').value.trim().toUpperCase(),
+                mykid: document.getElementById('mykid').value.trim(),
+                tahun: document.getElementById('tahun').value,
+                
+                kelabPersatuan: {
+                    nama: document.getElementById('kp_nama').value.trim().toUpperCase(),
+                    kehadiran: parseFloat(document.getElementById('kp_kehadiran').value) || 0,
+                    jawatan: parseFloat(document.getElementById('kp_jawatan').value) || 0,
+                    penglibatan: parseFloat(document.getElementById('kp_penglibatan').value) || 0,
+                    pencapaian: parseFloat(document.getElementById('kp_pencapaian').value) || 0,
+                    komitmen: parseFloat(document.getElementById('kp_komitmen').value) || 0,
+                    sumbangan: parseFloat(document.getElementById('kp_sumbangan').value) || 0,
+                    jumlah: calcs.kp
+                },
+                
+                badanBeruniform: {
+                    nama: document.getElementById('bb_nama').value.trim().toUpperCase(),
+                    kehadiran: parseFloat(document.getElementById('bb_kehadiran').value) || 0,
+                    jawatan: parseFloat(document.getElementById('bb_jawatan').value) || 0,
+                    penglibatan: parseFloat(document.getElementById('bb_penglibatan').value) || 0,
+                    pencapaian: parseFloat(document.getElementById('bb_pencapaian').value) || 0,
+                    komitmen: parseFloat(document.getElementById('bb_komitmen').value) || 0,
+                    sumbangan: parseFloat(document.getElementById('bb_sumbangan').value) || 0,
+                    jumlah: calcs.bb
+                },
+                
+                sukanPermainan: {
+                    nama: document.getElementById('sp_nama').value.trim().toUpperCase(),
+                    kehadiran: parseFloat(document.getElementById('sp_kehadiran').value) || 0,
+                    jawatan: parseFloat(document.getElementById('sp_jawatan').value) || 0,
+                    penglibatan: parseFloat(document.getElementById('sp_penglibatan').value) || 0,
+                    pencapaian: parseFloat(document.getElementById('sp_pencapaian').value) || 0,
+                    komitmen: parseFloat(document.getElementById('sp_komitmen').value) || 0,
+                    sumbangan: parseFloat(document.getElementById('sp_sumbangan').value) || 0,
+                    jumlah: calcs.sp
+                },
+                
+                ekstraKurikulum: calcs.ekstra,
+                markahKeseluruhan: calcs.keseluruhan,
+                gred: calcs.gred,
+                timestamp: new Date().toISOString()
+            };
+        }
+
+        function resetForm() {
+            document.getElementById('record-form').reset();
+            document.getElementById('doc-id').value = '';
+            document.querySelectorAll('span[id$="_jumlah"], #purata_dua_tertinggi, #paparan_ekstra, #markah_keseluruhan').forEach(el => el.textContent = '0');
+            
+            const gredEl = document.getElementById('gred_keseluruhan');
+            gredEl.textContent = '-';
+            gredEl.className = 'inline-flex items-center px-2.5 py-0.5 rounded-full text-md font-medium bg-gray-100 text-gray-800';
+        }
+
+        // Export to CSV functionality
+        window.exportToCSV = () => {
+            if (studentsData.length === 0) {
+                showModal('Tiada Data', 'Tiada rekod untuk dieksport.', 'info');
+                return;
+            }
+            
+            // Add BOM (Byte Order Mark) to ensure Excel reads UTF-8 correctly
+            let csvContent = "\uFEFF";
+            csvContent += "Bil,Nama,MyKid,Tahun,Kelab & Persatuan,Badan Beruniform,Sukan & Permainan,Ekstra Kurikulum,Markah Keseluruhan,Gred\n";
+            
+            // Sort data alphabetically by name before exporting
+            const sortedData = [...studentsData].sort((a, b) => a.nama.localeCompare(b.nama));
+
+            sortedData.forEach((student, index) => {
+                const kp = student.kelabPersatuan.jumlah || 0;
+                const bb = student.badanBeruniform.jumlah || 0;
+                const sp = student.sukanPermainan.jumlah || 0;
+                
+                const row = [
+                    index + 1,
+                    `"${student.nama}"`,
+                    `="${student.mykid}"`, // Force as string in Excel
+                    `"${student.tahun}"`,
+                    kp, bb, sp,
+                    student.ekstraKurikulum,
+                    student.markahKeseluruhan,
+                    `"${student.gred}"`
+                ].join(",");
+                
+                csvContent += row + "\n";
+            });
+            
+            // Create a blob and download link
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            const url = URL.createObjectURL(blob);
+            link.setAttribute("href", url);
+            link.setAttribute("download", "Rekod_ePAJSK.csv");
+            link.style.visibility = 'hidden';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        // Search functionality
+        document.getElementById('search-input').addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = studentsData.filter(s => 
+                s.nama.toLowerCase().includes(term) || 
+                s.mykid.toLowerCase().includes(term)
+            );
+            renderTable(filtered);
+        });
+
+        // -----------------------------------------
+        // RENDER UI COMPONENTS
+        // -----------------------------------------
+        function renderTable(data) {
+            const tbody = document.getElementById('student-table-body');
+            const emptyState = document.getElementById('empty-state');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                
+                // Sort data alphabetically by name
+                const sortedData = [...data].sort((a, b) => a.nama.localeCompare(b.nama));
+
+                sortedData.forEach((student, index) => {
+                    const gradeInfo = getGrade(student.markahKeseluruhan);
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 transition-colors';
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${index + 1}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            <div class="text-sm font-medium text-gray-900">${student.nama}</div>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.mykid}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${student.tahun}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-bold text-gray-900">${student.markahKeseluruhan}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${gradeInfo.class}">
+                                ${student.gred}
+                            </span>
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium no-print">
+                            <button onclick="viewStudent('${student.id}')" class="text-blue-600 hover:text-blue-900 mr-3" title="Papar/Cetak"><i class="fas fa-file-alt"></i></button>
+                            <button onclick="editStudent('${student.id}')" class="text-orange-600 hover:text-orange-900 mr-3" title="Kemaskini"><i class="fas fa-edit"></i></button>
+                            <button onclick="deleteStudent('${student.id}', '${student.nama}')" class="text-red-600 hover:text-red-900" title="Hapus"><i class="fas fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // Expose functions to global scope for inline HTML onclick handlers
+        window.viewStudent = (id) => {
+            const student = studentsData.find(s => s.id === id);
+            if (!student) return;
+
+            const detailContent = document.getElementById('detail-content');
+            const gradeInfo = getGrade(student.markahKeseluruhan);
+            
+            let html = `
+                <div class="text-center mb-8 border-b-2 border-gray-300 pb-4">
+                    <h2 class="text-2xl font-bold uppercase">Rekod Pentaksiran Aktiviti Jasmani, Sukan & Kokurikulum (PAJSK)</h2>
+                    <h3 class="text-xl font-semibold uppercase mt-1">SK Pos Musoh LZ</h3>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mb-8 text-sm">
+                    <div>
+                        <table class="w-full">
+                            <tr><td class="py-1 font-semibold w-1/3">Nama</td><td class="py-1">: ${student.nama}</td></tr>
+                            <tr><td class="py-1 font-semibold">No. MyKid</td><td class="py-1">: ${student.mykid}</td></tr>
+                            <tr><td class="py-1 font-semibold">Tahun/Kelas</td><td class="py-1">: ${student.tahun}</td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <table class="min-w-full border-collapse border border-gray-400 mb-8 text-sm">
+                    <thead>
+                        <tr class="bg-gray-100">
+                            <th class="border border-gray-400 px-4 py-2 text-left w-1/4">Komponen</th>
+                            <th class="border border-gray-400 px-4 py-2 text-left w-2/4">Aktiviti Disertai</th>
+                            <th class="border border-gray-400 px-4 py-2 text-center w-1/4">Markah Diperolehi</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="border border-gray-400 px-4 py-2 font-medium">Kelab & Persatuan</td>
+                            <td class="border border-gray-400 px-4 py-2">${student.kelabPersatuan.nama || '-'}</td>
+                            <td class="border border-gray-400 px-4 py-2 text-center">${student.kelabPersatuan.jumlah}</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-400 px-4 py-2 font-medium">Pasukan Badan Beruniform</td>
+                            <td class="border border-gray-400 px-4 py-2">${student.badanBeruniform.nama || '-'}</td>
+                            <td class="border border-gray-400 px-4 py-2 text-center">${student.badanBeruniform.jumlah}</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-400 px-4 py-2 font-medium">Sukan & Permainan</td>
+                            <td class="border border-gray-400 px-4 py-2">${student.sukanPermainan.nama || '-'}</td>
+                            <td class="border border-gray-400 px-4 py-2 text-center">${student.sukanPermainan.jumlah}</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="w-full md:w-1/2 ml-auto mb-16">
+                    <table class="min-w-full border-collapse border border-gray-400 text-sm bg-gray-50">
+                        <tr>
+                            <td class="border border-gray-400 px-4 py-2 font-semibold">Markah Ekstra Kurikulum</td>
+                            <td class="border border-gray-400 px-4 py-2 text-center">${student.ekstraKurikulum}</td>
+                        </tr>
+                        <tr class="bg-blue-50">
+                            <td class="border border-gray-400 px-4 py-2 font-bold text-lg">Markah Keseluruhan</td>
+                            <td class="border border-gray-400 px-4 py-2 text-center font-bold text-lg text-blue-700">${student.markahKeseluruhan}</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-gray-400 px-4 py-2 font-bold text-lg">Gred</td>
+                            <td class="border border-gray-400 px-4 py-2 text-center font-bold text-lg ${gradeInfo.class.replace('bg-', 'text-').split(' ')[1]}">${student.gred}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="mt-16 grid grid-cols-2 gap-8 text-center text-sm pt-8">
+                    <div>
+                        <div class="border-b border-black w-48 mx-auto mb-2"></div>
+                        <p class="font-semibold">Tandatangan Guru Kelas/Penasihat</p>
+                        <p class="mt-1">Tarikh: ....................................</p>
+                    </div>
+                    <div>
+                        <div class="border-b border-black w-48 mx-auto mb-2"></div>
+                        <p class="font-semibold">Tandatangan Guru Besar</p>
+                        <p class="mt-1">Tarikh: ....................................</p>
+                    </div>
+                </div>
+            `;
+            
+            detailContent.innerHTML = html;
+            switchView('detail');
+        };
+
+        window.editStudent = (id) => {
+            const student = studentsData.find(s => s.id === id);
+            if (!student) return;
+
+            resetForm();
+            document.getElementById('doc-id').value = student.id;
+            document.getElementById('form-title').textContent = 'Kemaskini Rekod Murid';
+
+            // Populate Basic Info
+            document.getElementById('nama').value = student.nama;
+            document.getElementById('mykid').value = student.mykid;
+            document.getElementById('tahun').value = student.tahun;
+
+            // Populate KP
+            document.getElementById('kp_nama').value = student.kelabPersatuan.nama || '';
+            document.getElementById('kp_kehadiran').value = student.kelabPersatuan.kehadiran;
+            document.getElementById('kp_jawatan').value = student.kelabPersatuan.jawatan;
+            document.getElementById('kp_penglibatan').value = student.kelabPersatuan.penglibatan;
+            document.getElementById('kp_pencapaian').value = student.kelabPersatuan.pencapaian;
+            document.getElementById('kp_komitmen').value = student.kelabPersatuan.komitmen;
+            document.getElementById('kp_sumbangan').value = student.kelabPersatuan.sumbangan;
+
+            // Populate BB
+            document.getElementById('bb_nama').value = student.badanBeruniform.nama || '';
+            document.getElementById('bb_kehadiran').value = student.badanBeruniform.kehadiran;
+            document.getElementById('bb_jawatan').value = student.badanBeruniform.jawatan;
+            document.getElementById('bb_penglibatan').value = student.badanBeruniform.penglibatan;
+            document.getElementById('bb_pencapaian').value = student.badanBeruniform.pencapaian;
+            document.getElementById('bb_komitmen').value = student.badanBeruniform.komitmen;
+            document.getElementById('bb_sumbangan').value = student.badanBeruniform.sumbangan;
+
+            // Populate SP
+            document.getElementById('sp_nama').value = student.sukanPermainan.nama || '';
+            document.getElementById('sp_kehadiran').value = student.sukanPermainan.kehadiran;
+            document.getElementById('sp_jawatan').value = student.sukanPermainan.jawatan;
+            document.getElementById('sp_penglibatan').value = student.sukanPermainan.penglibatan;
+            document.getElementById('sp_pencapaian').value = student.sukanPermainan.pencapaian;
+            document.getElementById('sp_komitmen').value = student.sukanPermainan.komitmen;
+            document.getElementById('sp_sumbangan').value = student.sukanPermainan.sumbangan;
+
+            // Populate Ekstra
+            document.getElementById('ekstra_markah').value = student.ekstraKurikulum;
+
+            calculateOverall(); // Trigger calculation to update displays
+            switchView('form');
+        };
+
+        window.deleteStudent = (id, nama) => {
+            showModal(
+                'Pengesahan Hapus', 
+                `Adakah anda pasti mahu menghapus rekod murid ${nama}? Tindakan ini tidak boleh dipulihkan.`,
+                'delete',
+                async (confirmed) => {
+                    if (confirmed && userId) {
+                        try {
+                            const appId = typeof __app_id !== 'undefined' ? __app_id : 'epajsk-sk-pos-musoh';
+                            await deleteDoc(doc(db, 'artifacts', appId, 'users', userId, 'rekod_pajsk', id));
+                            showModal('Berjaya', 'Rekod telah dihapuskan.', 'success');
+                        } catch (error) {
+                            console.error("Error deleting document: ", error);
+                            showModal('Ralat', 'Gagal menghapus rekod. Sila cuba lagi.', 'error');
+                        }
+                    }
+                },
+                true
+            );
+        };
+
+
+        // -----------------------------------------
+        // FIREBASE INITIALIZATION & DB OPERATIONS
+        // -----------------------------------------
+        async function initApp() {
+            try {
+                const appId = typeof __app_id !== 'undefined' ? __app_id : 'epajsk-sk-pos-musoh';
+                const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+                
+                if (!firebaseConfig) {
+                    document.getElementById('loading-state').innerHTML = `<div class="text-red-500 text-center"><i class="fas fa-exclamation-triangle text-4xl mb-4"></i><p>Ralat Konfigurasi Pangkalan Data.</p></div>`;
+                    return;
+                }
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                const token = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+
+                if (token) {
+                    await signInWithCustomToken(auth, token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        userId = user.uid;
+                        loadData(appId, userId);
+                    } else {
+                        document.getElementById('loading-state').innerHTML = `<div class="text-red-500 text-center"><p>Gagal log masuk. Sila muat semula halaman.</p></div>`;
+                    }
+                });
+
+            } catch (error) {
+                console.error("Initialization error:", error);
+                document.getElementById('loading-state').innerHTML = `<div class="text-red-500 text-center"><p>Ralat Sistem: ${error.message}</p></div>`;
+            }
+        }
+
+        // Fungsi untuk memasukkan data contoh secara automatik
+        window.seedDummyData = async () => {
+            if (!userId) return;
+            const btn = document.getElementById('btn-seed-data');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Memasukkan data...';
+            btn.disabled = true;
+
+            const dummyStudents = [
+                {
+                    nama: "BAHARUDDIN A/L ALANG",
+                    mykid: "110203-08-1235",
+                    tahun: "Tahun 6",
+                    kelabPersatuan: { nama: "KELAB PENCINTA ALAM", kehadiran: 40, jawatan: 10, penglibatan: 15, pencapaian: 10, komitmen: 10, sumbangan: 10, jumlah: 95 },
+                    badanBeruniform: { nama: "PENGAKAP", kehadiran: 40, jawatan: 10, penglibatan: 20, pencapaian: 10, komitmen: 10, sumbangan: 10, jumlah: 100 },
+                    sukanPermainan: { nama: "BOLA SEPAK", kehadiran: 40, jawatan: 10, penglibatan: 15, pencapaian: 15, komitmen: 10, sumbangan: 10, jumlah: 100 },
+                    ekstraKurikulum: 5,
+                    markahKeseluruhan: 100, 
+                    gred: "A",
+                    timestamp: new Date().toISOString()
+                },
+                {
+                    nama: "SURIA A/P NGAH",
+                    mykid: "120515-08-2244",
+                    tahun: "Tahun 5",
+                    kelabPersatuan: { nama: "KELAB KEBUDAYAAN", kehadiran: 35, jawatan: 5, penglibatan: 10, pencapaian: 5, komitmen: 8, sumbangan: 5, jumlah: 68 },
+                    badanBeruniform: { nama: "PANDU PUTERI TUNA", kehadiran: 40, jawatan: 10, penglibatan: 15, pencapaian: 10, komitmen: 10, sumbangan: 5, jumlah: 90 },
+                    sukanPermainan: { nama: "BOLA JARING", kehadiran: 30, jawatan: 5, penglibatan: 10, pencapaian: 5, komitmen: 5, sumbangan: 5, jumlah: 60 },
+                    ekstraKurikulum: 0,
+                    markahKeseluruhan: 79,
+                    gred: "B",
+                    timestamp: new Date().toISOString()
+                },
+                {
+                    nama: "KAMAL A/L SEMAN",
+                    mykid: "130822-08-1133",
+                    tahun: "Tahun 4",
+                    kelabPersatuan: { nama: "PERSATUAN SAINS", kehadiran: 20, jawatan: 0, penglibatan: 5, pencapaian: 0, komitmen: 5, sumbangan: 0, jumlah: 30 },
+                    badanBeruniform: { nama: "TKRS", kehadiran: 25, jawatan: 0, penglibatan: 10, pencapaian: 0, komitmen: 5, sumbangan: 0, jumlah: 40 },
+                    sukanPermainan: { nama: "OLAHRAGA", kehadiran: 20, jawatan: 0, penglibatan: 5, pencapaian: 0, komitmen: 5, sumbangan: 0, jumlah: 30 },
+                    ekstraKurikulum: 0,
+                    markahKeseluruhan: 35, 
+                    gred: "D",
+                    timestamp: new Date().toISOString()
+                }
+            ];
+
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'epajsk-sk-pos-musoh';
+            try {
+                for (const student of dummyStudents) {
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'rekod_pajsk'), student);
+                }
+            } catch (error) {
+                console.error("Error seeding data:", error);
+                showModal('Ralat', 'Gagal memasukkan data contoh.', 'error');
+            }
+        };
+
+        // Event listener untuk butang Data Contoh
+        document.addEventListener('click', (e) => {
+            const target = e.target.closest('#btn-seed-data');
+            if (target) {
+                window.seedDummyData();
+            }
+        });
+
+        function loadData(appId, uid) {
+            const recordsRef = collection(db, 'artifacts', appId, 'users', uid, 'rekod_pajsk');
+            // Using simple query as per Rule 2, sorting happens in client (renderTable)
+            const q = query(recordsRef);
+
+            onSnapshot(q, (snapshot) => {
+                studentsData = [];
+                snapshot.forEach((doc) => {
+                    studentsData.push({ id: doc.id, ...doc.data() });
+                });
+                
+                document.getElementById('loading-state').classList.add('hidden');
+                document.getElementById('views-container').classList.remove('hidden');
+                
+                // Only switch to home if we are loading initially
+                if(document.getElementById('view-home').classList.contains('hidden') && 
+                   document.getElementById('view-form').classList.contains('hidden') &&
+                   document.getElementById('view-detail').classList.contains('hidden')){
+                     switchView('home');
+                }
+                
+                // If search has value, maintain filter, else render all
+                const searchTerm = document.getElementById('search-input').value.toLowerCase();
+                if(searchTerm) {
+                     const filtered = studentsData.filter(s => 
+                        s.nama.toLowerCase().includes(searchTerm) || 
+                        s.mykid.toLowerCase().includes(searchTerm)
+                    );
+                    renderTable(filtered);
+                } else {
+                    renderTable(studentsData);
+                }
+                
+            }, (error) => {
+                console.error("Error fetching data:", error);
+                showModal('Ralat', 'Gagal memuat turun data dari pelayan.', 'error');
+            });
+        }
+
+        // Form Submit Handler
+        document.getElementById('record-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!userId) return;
+
+            const submitBtn = document.getElementById('btn-save');
+            const originalText = submitBtn.innerHTML;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Menyimpan...';
+            submitBtn.disabled = true;
+
+            const data = getFormData();
+            const docId = document.getElementById('doc-id').value;
+            const appId = typeof __app_id !== 'undefined' ? __app_id : 'epajsk-sk-pos-musoh';
+
+            try {
+                if (docId) {
+                    // Update
+                    await updateDoc(doc(db, 'artifacts', appId, 'users', userId, 'rekod_pajsk', docId), data);
+                    showModal('Berjaya', 'Rekod berjaya dikemaskini.', 'success', () => switchView('home'));
+                } else {
+                    // Add
+                    await addDoc(collection(db, 'artifacts', appId, 'users', userId, 'rekod_pajsk'), data);
+                    showModal('Berjaya', 'Rekod baru berjaya disimpan.', 'success', () => switchView('home'));
+                }
+            } catch (error) {
+                console.error("Error saving document: ", error);
+                showModal('Ralat', 'Gagal menyimpan rekod. Sila semak sambungan internet anda.', 'error');
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Start the app
+        window.onload = initApp;
+
+    </script>
+</body>
+</html>
