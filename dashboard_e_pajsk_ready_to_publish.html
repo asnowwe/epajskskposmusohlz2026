@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>e-PAJSK SK Pos Musoh LZ</title>
+    <!-- Tailwind CSS untuk reka bentuk premium -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Alpine.js untuk fungsi interaktif, carian, dan penyelarasan real-time -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Lucide Icons untuk ikon dashboard yang moden -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 min-h-screen">
+
+    <div x-data="pajskApp()" x-init="fetchData()" class="flex flex-col min-h-screen" x-cloak>
+        
+        <!-- Header & Live Connection Status -->
+        <header class="bg-blue-800 text-white p-6 shadow-md">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div class="flex items-center gap-4">
+                    <div class="bg-white/20 p-3 rounded-xl">
+                        <i data-lucide="trophy" class="text-yellow-400 w-9 h-9"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold tracking-tight">e-PAJSK SK Pos Musoh LZ</h1>
+                        <p class="text-blue-200 mt-1 text-sm md:text-base">Sistem Pemantauan Kokurikulum, Koakademik & Sukan</p>
+                    </div>
+                </div>
+                
+                <!-- Live Data Indicator -->
+                <div class="flex flex-col items-end">
+                    <div class="flex items-center gap-2 bg-blue-900/50 px-3 py-1.5 rounded-lg border border-blue-700/50">
+                        <span class="w-2 h-2 rounded-full" :class="dataSource.includes('Google') ? 'bg-green-400 animate-pulse' : 'bg-orange-400'"></span>
+                        <span class="text-xs font-semibold text-blue-100" x-text="dataSource">Memuatkan...</span>
+                        <button @click="fetchData()" :disabled="loading" title="Segarkan data dari Google Sheet" class="text-white hover:text-yellow-400 transition-colors ml-2">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5" :class="loading ? 'animate-spin' : ''"></i>
+                        </button>
+                    </div>
+                    <span class="text-[10px] text-blue-300 mt-1">Status: Dikemaskini secara langsung</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Warning Alert for Backup Data fallback -->
+        <template x-if="errorMsg">
+            <div class="bg-amber-50 border-b border-amber-200 text-amber-800 px-6 py-2.5 text-xs md:text-sm flex items-center gap-2">
+                <i data-lucide="alert-circle" class="text-amber-600 w-4 h-4 flex-shrink-0"></i>
+                <span x-text="errorMsg"></span>
+            </div>
+        </template>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-6 space-y-8">
+            
+            <!-- Loading State Spinner -->
+            <template x-if="loading">
+                <div class="flex flex-col items-center justify-center py-20 space-y-4">
+                    <i data-lucide="refresh-cw" class="animate-spin text-blue-600 w-12 h-12"></i>
+                    <p class="text-slate-500 font-semibold text-lg">Memuat turun data Google Sheet terkini...</p>
+                </div>
+            </template>
+
+            <template x-if="!loading">
+                <div class="space-y-8">
+                    
+                    <!-- Quick Stats Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 transition-all hover:shadow-md">
+                            <div class="bg-blue-100 text-blue-600 p-3 rounded-lg"><i data-lucide="users" class="w-6 h-6"></i></div>
+                            <div>
+                                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Jumlah Murid</p>
+                                <p class="text-2xl font-black text-slate-800" x-text="stats.total + ' Orang'"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 transition-all hover:shadow-md">
+                            <div class="bg-yellow-100 text-yellow-600 p-3 rounded-lg"><i data-lucide="star" class="w-6 h-6"></i></div>
+                            <div>
+                                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Penerima 4 ★ Nilam</p>
+                                <p class="text-2xl font-black text-slate-800" x-text="stats.bintang4 + ' Orang'"></p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 transition-all hover:shadow-md">
+                            <div class="bg-green-100 text-green-600 p-3 rounded-lg"><i data-lucide="activity" class="w-6 h-6"></i></div>
+                            <div>
+                                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Atlet Bola Baling</p>
+                                <p class="text-2xl font-black text-slate-800" x-text="stats.bolaBaling + ' Orang'"></p>
+                            </div>
+                        </div>
+
+                        <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-5 flex items-center gap-4 transition-all hover:shadow-md">
+                            <div class="bg-orange-100 text-orange-600 p-3 rounded-lg"><i data-lucide="activity" class="w-6 h-6"></i></div>
+                            <div>
+                                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider">Atlet Sepak Takraw</p>
+                                <p class="text-2xl font-black text-slate-800" x-text="stats.sepakTakraw + ' Orang'"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual Analytics Section -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 md:p-6 space-y-6">
+                        <div class="flex items-center gap-2 border-b border-slate-100 pb-4">
+                          <i data-lucide="bar-chart-3" class="text-blue-600 w-6 h-6"></i>
+                          <div>
+                            <h2 class="text-xl font-bold text-slate-800">Analisis Pelibatan Murid</h2>
+                            <p class="text-xs text-slate-500">Statistik pembahagian unit dan pencapaian keseluruhan di SK Pos Musoh LZ</p>
+                          </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                          
+                          <!-- Chart 1: Kelab & Persatuan -->
+                          <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+                              <i data-lucide="check-circle-2" class="text-blue-500 w-4 h-4"></i>
+                              Kelab & Persatuan
+                            </h3>
+                            <div class="space-y-3.5">
+                              <template x-for="[clubName, count] in Object.entries(stats.clubs)" :key="clubName">
+                                <div class="space-y-1">
+                                  <div class="flex justify-between text-xs font-bold text-slate-700">
+                                    <span class="truncate max-w-[180px]" x-text="clubName"></span>
+                                    <span x-text="count + ' murid (' + Math.round((count / stats.total) * 100) + '%)'"></span>
+                                  </div>
+                                  <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                    <div class="bg-blue-600 h-2.5 rounded-full transition-all duration-500" :style="'width: ' + ((count / stats.total) * 100) + '%'"></div>
+                                  </div>
+                                </div>
+                              </template>
+                            </div>
+                          </div>
+
+                          <!-- Chart 2: Sukan & Permainan -->
+                          <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+                              <i data-lucide="check-circle-2" class="text-green-500 w-4 h-4"></i>
+                              Sukan & Permainan
+                            </h3>
+                            <div class="space-y-3.5">
+                              <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-slate-700">
+                                  <span>Bola Baling</span>
+                                  <span x-text="stats.bolaBaling + ' murid (' + Math.round((stats.bolaBaling/stats.total)*100) + '%)'"></span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                  <div class="bg-green-600 h-2.5 rounded-full transition-all duration-500" :style="'width: ' + ((stats.bolaBaling/stats.total)*100) + '%'"></div>
+                                </div>
+                              </div>
+
+                              <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-slate-700">
+                                  <span>Sepak Takraw</span>
+                                  <span x-text="stats.sepakTakraw + ' murid (' + Math.round((stats.sepakTakraw/stats.total)*100) + '%)'"></span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                  <div class="bg-orange-500 h-2.5 rounded-full transition-all duration-500" :style="'width: ' + ((stats.sepakTakraw/stats.total)*100) + '%'"></div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div class="mt-6 p-3 bg-white border border-slate-100 rounded-lg text-xs leading-relaxed text-slate-500">
+                              <strong>Info Sukan:</strong> Sukan Bola Baling mempunyai penyertaan tertinggi iaitu sebahagian besar murid perempuan dan sebilangan murid lelaki di sekolah.
+                            </div>
+                          </div>
+
+                          <!-- Chart 3: Taburan Bintang Nilam -->
+                          <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            <h3 class="text-sm font-bold text-slate-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+                              <i data-lucide="check-circle-2" class="text-yellow-500 w-4 h-4"></i>
+                              Taburan Bintang Nilam
+                            </h3>
+                            <div class="space-y-3.5">
+                              <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-slate-700">
+                                  <span>4 Bintang</span>
+                                  <span x-text="stats.bintang4 + ' murid'"></span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                  <div class="bg-yellow-500 h-2 rounded-full transition-all duration-500" :style="'width: ' + ((stats.bintang4/stats.total)*100) + '%'"></div>
+                                </div>
+                              </div>
+
+                              <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-slate-700">
+                                  <span>3 Bintang</span>
+                                  <span x-text="stats.bintang3 + ' murid'"></span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                  <div class="bg-yellow-400 h-2 rounded-full transition-all duration-500" :style="'width: ' + ((stats.bintang3/stats.total)*100) + '%'"></div>
+                                </div>
+                              </div>
+
+                              <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-slate-700">
+                                  <span>2 Bintang</span>
+                                  <span x-text="stats.bintang2 + ' murid'"></span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                  <div class="bg-amber-300 h-2 rounded-full transition-all duration-500" :style="'width: ' + ((stats.bintang2/stats.total)*100) + '%'"></div>
+                                </div>
+                              </div>
+
+                              <div class="space-y-1">
+                                <div class="flex justify-between text-xs font-bold text-slate-700">
+                                  <span>1 Bintang</span>
+                                  <span x-text="stats.bintang1 + ' murid'"></span>
+                                </div>
+                                <div class="w-full bg-slate-200 rounded-full h-2">
+                                  <div class="bg-amber-100 h-2 rounded-full transition-all duration-500" :style="'width: ' + ((stats.bintang1/stats.total)*100) + '%'"></div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+
+                      <!-- Search & Table Section -->
+                      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        
+                        <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-50/50">
+                          <h2 class="text-lg font-bold text-slate-800 flex items-center gap-2">
+                            <i data-lucide="book-open" class="text-blue-600 w-5 h-5"></i>
+                            Rekod Lengkap PAJSK Murid
+                          </h2>
+                          <div class="relative w-full md:w-80">
+                            <span class="absolute left-3 top-2.5 text-slate-400">
+                              <i data-lucide="search" class="w-4.5 h-4.5"></i>
+                            </span>
+                            <input 
+                              type="text" 
+                              placeholder="Cari nama, kelas (cth: 'Tahun 4') atau No. KP..." 
+                              class="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-sm"
+                              x-model="searchQuery"
+                            />
+                          </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                          <table class="w-full text-left border-collapse min-w-[800px]">
+                            <thead>
+                              <tr class="bg-slate-100/50 text-slate-600 text-sm border-b border-slate-200">
+                                <th class="p-4 font-semibold w-16 text-center">Bil</th>
+                                <th class="p-4 font-semibold">Nama Murid & No. KP</th>
+                                <th class="p-4 font-semibold text-center">Tahun</th>
+                                <th class="p-4 font-semibold">Sukan & Permainan</th>
+                                <th class="p-4 font-semibold text-center">Bintang Nilam</th>
+                                <th class="p-4 font-semibold text-center">Tindakan</th>
+                              </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                              <template x-for="(student, idx) in filteredStudents()" :key="idx">
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                  <td class="p-4 text-center text-slate-500 font-medium" x-text="student.bil"></td>
+                                  <td class="p-4">
+                                    <div class="font-bold text-slate-800 uppercase" x-text="student.nama"></div>
+                                    <div class="text-sm text-slate-500" x-text="student.ic"></div>
+                                  </td>
+                                  <td class="p-4 text-center">
+                                    <span class="bg-blue-100 text-blue-800 py-1 px-3 rounded-full text-xs font-bold" x-text="'Thn ' + student.tahun"></span>
+                                  </td>
+                                  <td class="p-4 text-sm font-medium text-slate-700" x-text="student.sukan"></td>
+                                  <td class="p-4 text-center">
+                                    <span class="inline-flex items-center gap-1 bg-yellow-100 text-yellow-800 py-1 px-3 rounded-full text-xs font-bold">
+                                      <i data-lucide="star" class="fill-yellow-500 text-yellow-500 w-3.5 h-3.5"></i>
+                                      <span x-text="student.bintang"></span>
+                                    </span>
+                                  </td>
+                                  <td class="p-4 text-center">
+                                    <button 
+                                      @click="openModal(student)"
+                                      class="inline-flex items-center gap-1 text-sm bg-blue-600 text-white py-1.5 px-4 rounded-lg hover:bg-blue-700 transition-colors font-medium shadow-sm hover:shadow"
+                                    >
+                                      Lihat <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                                    </button>
+                                  </td>
+                                </tr>
+                              </template>
+                              <template x-if="filteredStudents().length === 0">
+                                <tr>
+                                  <td colSpan="6" class="p-8 text-center text-slate-500" x-text="'Tiada rekod ditemui untuk carian ' + searchQuery"></td>
+                                </tr>
+                              </template>
+                            </tbody>
+                          </table>
+                        </div>
+                        
+                      </div>
+
+                </div>
+            </template>
+        </main>
+
+        <!-- Modal Detail Murid -->
+        <template x-if="selectedStudent">
+          <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+              
+              <!-- Modal Header -->
+              <div class="bg-blue-800 p-6 flex justify-between items-start text-white relative">
+                <div class="pr-8">
+                  <h3 class="text-2xl font-bold mb-1 uppercase" x-text="selectedStudent.nama"></h3>
+                  <div class="flex items-center gap-4 text-blue-200 text-sm">
+                    <span class="flex items-center gap-1"><i data-lucide="user" class="w-3.5 h-3.5"></i> <span x-text="selectedStudent.ic"></span></span>
+                    <span class="flex items-center gap-1"><i data-lucide="book-open" class="w-3.5 h-3.5"></i> Tahun <span x-text="selectedStudent.tahun"></span></span>
+                  </div>
+                </div>
+                <button 
+                  @click="closeModal()"
+                  class="absolute top-6 right-6 p-1 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                >
+                  <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+              </div>
+
+              <!-- Modal Body -->
+              <div class="p-6 overflow-y-auto bg-slate-50">
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Unit Beruniform</p>
+                    <p class="font-bold text-slate-800" x-text="selectedStudent.unit"></p>
+                  </div>
+                  <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Kelab / Persatuan</p>
+                    <p class="font-bold text-slate-800" x-text="selectedStudent.kelab"></p>
+                  </div>
+                  <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+                    <p class="text-xs text-slate-400 font-semibold uppercase tracking-wider mb-1">Sukan & Permainan</p>
+                    <p class="font-bold text-slate-800" x-text="selectedStudent.sukan"></p>
+                  </div>
+                  <div class="bg-yellow-50 p-4 rounded-xl border border-yellow-200 shadow-sm">
+                    <p class="text-xs text-yellow-600 font-semibold uppercase tracking-wider mb-1">Nilam</p>
+                    <p class="font-bold text-yellow-800 flex items-center gap-1">
+                      <i data-lucide="star" class="fill-yellow-500 text-yellow-500 w-4.5 h-4.5"></i>
+                      <span x-text="selectedStudent.bintang"></span>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Pencapaian & Penglibatan Tambahan -->
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                  <div class="bg-slate-100 p-4 border-b border-slate-200">
+                    <h4 class="font-bold text-slate-800 flex items-center gap-2">
+                      <i data-lucide="award" class="text-blue-600 w-4.5 h-4.5"></i>
+                      Jawatan, Pencapaian & Penglibatan MSSD / Tambahan
+                    </h4>
+                  </div>
+                  <div class="p-4">
+                    <template x-if="selectedStudent.pencapaianList.length > 0">
+                      <ul class="space-y-3">
+                        <template x-for="(item, i) in selectedStudent.pencapaianList" :key="i">
+                          <li class="flex items-start gap-3">
+                            <i data-lucide="medal" class="text-blue-500 mt-1 flex-shrink-0 w-4 h-4"></i>
+                            <span class="text-slate-700 leading-relaxed text-sm md:text-base" x-text="item"></span>
+                          </li>
+                        </template>
+                      </ul>
+                    </template>
+                    <template x-if="selectedStudent.pencapaianList.length === 0">
+                      <p class="text-slate-500 text-sm italic py-2 text-center">Tiada rekod tambahan dicatatkan.</p>
+                    </template>
+                  </div>
+                </div>
+
+              </div>
+              
+              <!-- Modal Footer -->
+              <div class="p-4 border-t border-slate-200 bg-white flex justify-end">
+                <button 
+                  @click="closeModal()"
+                  class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-6 py-2 rounded-lg font-medium transition-colors"
+                >
+                  Tutup
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </template>
+
+        <!-- Footer Area with Credit -->
+        <footer class="bg-slate-950 text-slate-300 py-8 px-6 mt-12 border-t border-slate-800">
+          <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+            <div>
+              <p class="font-bold tracking-wider text-sm text-slate-100 uppercase">
+                DISEDIAKAN OLEH: UNIT KOKURIKULUM SK POS MUSOH LZ
+              </p>
+              <p class="text-xs text-slate-400 mt-1">
+                Sistem Analisis & Dashboard e-PAJSK 2026. Hak Cipta Terpelihara.
+              </p>
+            </div>
+            <div class="text-xs text-slate-500 bg-slate-900 px-3 py-1.5 rounded border border-slate-800">
+              Segerak secara langsung melalui pautan Google Sheets rasmi sekolah.
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+    <script>
+        // Backup dataset for safe-offline viewing
+        const fallbackRawData = `1,AFIQ ZAFRAN A/L BAH MANTEK,160712-08-0727,4,PENGAKAP,PERSATUAN BM,SEPAK TAKRAW,2 BINTANG
+2,ALISA SAFIKA A/P HANAZAN,161002-08-0444,4,PENGAKAP,KELAB DOKTOR MUDA,BOLA BALING,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                           2. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                     3. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                             4. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,3 BINTANG
+3,ALVINA KERISTINA A/P BAH PANDAK AZIZUL,160118-08-0150,4,PENGAKAP,PERSATUAN BM,BOLA BALING,PENGAWAS SEKOLAH,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD CATUR                                                                 2. MEWAKILI SEKOLAH KE MSSD BADMINTON                                                                   3. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                          4. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                                 5. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                             6. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,3 BINTANG
+4,AZRIEL DANIEL A/L AJUWI,160302-08-0089,4,PENGAKAP,KELAB RUKUN NEGARA,SEPAK TAKRAW,PENGAWAS PSS,1. MEWAKILI SEKOLAH KE MSSD BADMINTON,2 BINTANG
+5,BAH SAIRIL A/L ZAMRI,160212-08-0835,4,PENGAKAP,KELAB DOKTOR MUDA,SEPAK TAKRAW,PENGAWAS SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD MERENTAS DESA,3 BINTANG
+6,BAYLEY A/P BASRI,160926-08-0634,4,PENGAKAP,KELAB DOKTOR MUDA,BOLA BALING,PENGAWAS PSS,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                         2. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                      3. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                             4. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,3 BINTANG
+7,HAZIQ AZIZI A/L PENSIWAN,160206-08-0767,4,PENGAKAP,PERSATUAN BM,SEPAK TAKRAW,PENGAWAS SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD MERENTAS DESA                                                                              2. MEWAKILI SEKOLAH KE MSSD BADMINTON,3 BINTANG
+8,NORSHAHIRAH BINTI SHAHRIL,161116-08-0098,4,PENGAKAP,KELAB DOKTOR MUDA,BOLA BALING,2 BINTANG
+9,ROSNELYEN A/P RUDY,161003-08-0550,4,PENGAKAP,PERSATUAN BM,BOLA BALING,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD MERENTAS DESA                                                                               2. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                        3. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                             4. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                           5. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,2 BINTANG
+10,SENIESHA A/P ROBI,161129-08-0636,4,PENGAKAP,KELAB RUKUN NEGARA,BOLA BALING,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD MERENTAS DESA                                                                                 2. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                           3. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                               4. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                            5. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,1. TEMPAT KETIGA PERTANDINGAN MEREKA CIPTA POSTER SEMPENA HARI MALARIA PERINGKAT DAERAH BATANG PADANG,2 BINTANG
+11,MUHAMMAD SUFAIRI BIN ABDUL RAHIM,161019-08-1101,4,PENGAKAP,KELAB RUKUN NEGARA,SEPAK TAKRAW,1 BINTANG
+12,ZUZI YANTI A/P ZIZIRUAN,161005-08-0896,4,PENGAKAP,PERSATUAN BM,BOLA BALING,PENGAWAS PSS,3 BINTANG
+13,HISHAM A/L BAH SAM,150602-08-0313,5,PENGAKAP,KELAB RUKUN NEGARA,SEPAK TAKRAW,PENGAWAS PSS,1. KERIS GANGSA           ,1. MEWAKILI SEKOLAH KE MSSD MERENTAS DESA,2 BINTANG
+14,NOR AZIZAH A/P JUNDI,150323-08-0804,5,PENGAKAP,PERSATUAN BM,BOLA BALING,PENGAWAS PSS,1. KERIS GANGSA               ,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                           2. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                         3. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                           4. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,2 BINTANG
+15,SAMUEL LEMUEL DOMANSSIE A/L SAMRI,150621-14-0027,5,PENGAKAP,KELAB DOKTOR MUDA,SEPAK TAKRAW,PENGAWAS SEKOLAH,1. KERIS GANGSA               ,1. MEWAKILI SEKOLAH KE MSSD CATUR,2 BINTANG
+16,WAK KOOT A/P BAH PELADOH,150305-08-0640,5,PENGAKAP,KELAB RUKUN NEGARA,BOLA BALING,PENGAWAS SEKOLAH,1. KERIS GANGSA         ,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                 2. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                            3. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                           4. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,2 BINTANG
+17,SHANISA ELISA A/P ZAINAL,150513-08-0426,5,PENGAKAP,KELAB DOKTOR MUDA,BOLA BALING,PENGAWAS SEKOLAH,1. KERIS GANGSA              ,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD CATUR                                                             2. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                              3. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                                                         4. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                           5. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,3 BINTANG
+18,CEVIBIN A/L BAH LEL,140726-08-0439,6,PENGAKAP,KELAB RUKUN NEGARA,SEPAK TAKRAW,1. KERIS GANGSA                 2. KERIS PERAK       3. KERIS EMAS,1. MEWAKILI SEKOLAH KE MSSD MERENTAS DESA,2 BINTANG
+19,LLUVIA NEEFERLUVLEY CAROLEY,140318-14-1116,6,PENGAKAP,KELAB DOKTOR MUDA,BOLA BALING,KETUA PENGAWAS SEKOLAH,1. KERIS GANGSA                 2. KERIS PERAK       3. KERIS EMAS,PASUKAN BOLA BALING SEKOLAH,1. TEMPAT KE-12 MSSD MERENTAS DESA                                                                 2. MEWAKILI SEKOLAH KE MSSD CATUR                                                              3. JOHAN MSSD BADMINTON P12                                        4. MEWAKILI DAERAH KE MSSPK BADMINTON                                                                 5. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                       6. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                                     7. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                           8. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,4 BINTANG
+20,NOOR AMYLIANA SHAFIERA NABELLA A/P LUIS,140521-08-0072,6,PENGAKAP,KELAB RUKUN NEGARA,BOLA BALING,PENOLONG KETUA PENGAWAS PSS,1. KERIS GANGSA                 2. KERIS PERAK       3. KERIS EMAS,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                          2. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                     3. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                           4. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,3 BINTANG
+21,NORELLY SAFIKA BINTI ABDUL QUDDUS,140206-08-1016,6,PENGAKAP,PERSATUAN BM,BOLA BALING,1. KERIS GANGSA                 2. KERIS PERAK      ,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD MERENTAS DESA                                                                               2. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                          3. MEWAKILI DAERAH KE MSSPK BOLA TAMPAR                                                                           4. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                              5. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                            6. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,3 BINTANG
+22,RAYYAN SYAZMIE A/L RENZY ERIN,140922-08-0647,6,PENGAKAP,KELAB DOKTOR MUDA,SEPAK TAKRAW,KETUA PENGAWAS PSS,1. KERIS GANGSA                 2. KERIS PERAK       3. KERIS EMAS,1. MEWAKILI SEKOLAH KE MSSD CATUR,3 BINTANG
+23,REVIEN EVEN A/L BAH ROSLAN,140629-08-0525,6,PENGAKAP,PERSATUAN BM,SEPAK TAKRAW,1. TEMPAT KETIGA PERTANDINGAN BADMINTON KARNIVAL PENDIDIKAN KHAS DAERAH BATANG PADANG,1 BINTANG
+24,SOFI A/L BAH SAMAD,140406-08-0501,6,PENGAKAP,PERSATUAN BM,SEPAK TAKRAW,PENOLONG KETUA PENGAWAS SEKOLAH,1. KERIS GANGSA                 2. KERIS PERAK       3. KERIS EMAS,3 BINTANG
+25,CALAUDIYA ELVITIYA A/P YAHYA,140504-08-0572,6,PENGAKAP,KELAB DOKTOR MUDA,BOLA BALING,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                            2. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                              3. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                            4. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,2 BINTANG
+26,SEZRIN BINTI NIZAM,140913-08-0258,6,PENGAKAP,KELAB RUKUN NEGARA,BOLA BALING,1. KERIS GANGSA                 2. KERIS PERAK             3. KERIS EMAS,PASUKAN BOLA BALING SEKOLAH,1. MEWAKILI SEKOLAH KE MSSD BOLA TAMPAR                                                                          2. NAIB JOHAN PERTANDINGAN 4 PENJURU BOLA TAMPAR DAERAH                                      3. MEWAKILI SEKOLAH KE MSSD BOLA BALING                                                                            4. TEMPAT KETIGA PERTANDINGAN 5 PENJURU BOLA BALING DAERAH,2 BINTANG`;
+
+        // Parser helper to parse properly wrapped CSV files
+        function parseCSV(text) {
+          const lines = text.split(/\r?\n/);
+          return lines.map(line => {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+              const char = line[i];
+              if (char === '"') {
+                inQuotes = !inQuotes;
+              } else if (char === ',' && !inQuotes) {
+                result.push(current);
+                current = '';
+              } else {
+                current += char;
+              }
+            }
+            result.push(current);
+            return result;
+          }).filter(row => row.length > 0 && row[0] !== '');
+        }
+
+        // Process columns to structural JS objects
+        function processRowsToStudents(rows) {
+          return rows.map(cols => {
+            if (cols.length < 8) return null;
+            
+            // Clean quotes & whitespace
+            const cleanCols = cols.map(c => c.replace(/^"|"$/g, '').trim());
+            
+            // Skip headers
+            if (cleanCols[0].toLowerCase().includes('bil') || cleanCols[1].toLowerCase().includes('nama')) {
+              return null;
+            }
+            
+            const bil = cleanCols[0];
+            const nama = cleanCols[1];
+            const ic = cleanCols[2];
+            const tahun = cleanCols[3];
+            const unit = cleanCols[4];
+            const kelab = cleanCols[5];
+            const sukan = cleanCols[6];
+            
+            const bintang = cleanCols[cleanCols.length - 1];
+            
+            const rawExtras = cleanCols.slice(7, cleanCols.length - 1);
+            let pencapaianList = [];
+            
+            rawExtras.forEach(item => {
+              if(item.trim()) {
+                const subItems = item.split(/\s{2,}/); 
+                subItems.forEach(si => {
+                  if(si.trim()) pencapaianList.push(si.trim());
+                });
+              }
+            });
+
+            return { bil, nama, ic, tahun, unit, kelab, sukan, bintang, pencapaianList };
+          }).filter(Boolean);
+        }
+
+        function pajskApp() {
+            return {
+                searchQuery: '',
+                selectedStudent: null,
+                loading: true,
+                dataSource: 'Memulakan sambungan...',
+                errorMsg: null,
+                students: [],
+                stats: {
+                    total: 0,
+                    bolaBaling: 0,
+                    sepakTakraw: 0,
+                    bintang4: 0,
+                    bintang3: 0,
+                    bintang2: 0,
+                    bintang1: 0,
+                    clubs: {}
+                },
+                sheetCSVUrl: 'https://docs.google.com/spreadsheets/d/1J7jfDjHC8bJddSKLgLF4VIjHc0QL7KL3MV0_5iwQmms/gviz/tq?tqx=out:csv',
+
+                async fetchData() {
+                    this.loading = true;
+                    this.errorMsg = null;
+                    try {
+                        const response = await fetch(this.sheetCSVUrl);
+                        if (!response.ok) {
+                            throw new Error('Gagal memuat turun data dari Google Sheet.');
+                        }
+                        const csvText = await response.text();
+                        const parsedRows = parseCSV(csvText);
+                        const structuredData = processRowsToStudents(parsedRows);
+                        
+                        if (structuredData.length > 0) {
+                            this.students = structuredData;
+                            this.dataSource = 'Google Sheets (Real-Time)';
+                        } else {
+                            throw new Error('Format data Google Sheet tidak sepadan.');
+                        }
+                    } catch (err) {
+                        console.warn('Fallback applied due to connection blocking:', err);
+                        const parsedRows = parseCSV(fallbackRawData);
+                        this.students = processRowsToStudents(parsedRows);
+                        this.dataSource = 'Data Tempatan (Sandaran)';
+                        this.errorMsg = 'Sistem memaparkan data sandaran tempatan. Sila pastikan pautan perkongsian Google Sheet anda diaturkan kepada "Anyone with link can view".';
+                    } finally {
+                        this.calculateStats();
+                        this.loading = false;
+                        this.$nextTick(() => { lucide.createIcons(); });
+                    }
+                },
+
+                calculateStats() {
+                    const total = this.students.length;
+                    const bolaBaling = this.students.filter(s => s.sukan.toUpperCase().includes('BOLA BALING')).length;
+                    const sepakTakraw = this.students.filter(s => s.sukan.toUpperCase().includes('SEPAK TAKRAW')).length;
+                    
+                    const bintang4 = this.students.filter(s => s.bintang.includes('4 BINTANG')).length;
+                    const bintang3 = this.students.filter(s => s.bintang.includes('3 BINTANG')).length;
+                    const bintang2 = this.students.filter(s => s.bintang.includes('2 BINTANG')).length;
+                    const bintang1 = this.students.filter(s => s.bintang.includes('1 BINTANG')).length;
+
+                    const clubs = {};
+                    this.students.forEach(s => {
+                        if (s.kelab) {
+                            clubs[s.kelab] = (clubs[s.kelab] || 0) + 1;
+                        }
+                    });
+
+                    this.stats = { total, bolaBaling, sepakTakraw, bintang4, bintang3, bintang2, bintang1, clubs };
+                },
+
+                filteredStudents() {
+                    if (!this.searchQuery) return this.students;
+                    return this.students.filter(student => 
+                        student.nama.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                        student.ic.includes(this.searchQuery) ||
+                        student.tahun.includes(this.searchQuery)
+                    );
+                },
+
+                openModal(student) {
+                    this.selectedStudent = student;
+                    this.$nextTick(() => { lucide.createIcons(); });
+                },
+
+                closeModal() {
+                    this.selectedStudent = null;
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+</body>
+</html>
